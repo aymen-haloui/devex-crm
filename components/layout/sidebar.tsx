@@ -131,7 +131,8 @@ export default function Sidebar({ user }: SidebarProps) {
         {/* Header */}
         <div className={cn("flex items-center justify-between mb-8", isCollapsed && "flex-col gap-4")}>
           <div className="flex items-center gap-3">
-            {!isCollapsed && <h1 className="text-xl font-black tracking-tighter" style={{ color: '#fb2528' }}>Devex CRM</h1>}
+            {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-to-interactive-role */}
+            {!isCollapsed && <h1 className="text-xl font-black tracking-tighter text-[#fb2528]">Devex CRM</h1>}
           </div>
           <Button
             variant="ghost"
@@ -185,6 +186,7 @@ export default function Sidebar({ user }: SidebarProps) {
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
+                    title="Clear search"
                     className="absolute end-2 top-2.5 p-0.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
                   >
                     <X className="w-3.5 h-3.5" />

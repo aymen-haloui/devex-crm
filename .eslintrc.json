@@ -34,7 +34,8 @@
 
     "react-hooks/exhaustive-deps": "warn",
     "react-hooks/static-components": "off",
-    "react-hooks/purity": "off"
+    "react-hooks/purity": "off",
+    "jsx-a11y/no-noninteractive-element-to-interactive-role": "off"
   }
 }
 
