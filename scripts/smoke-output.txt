@@ -1,0 +1,21 @@
+--- /api/mass-actions/tags ---
+Status: 200
+Body: {
+  success: true,
+  message: 'Tag operation queued',
+  data: { entity: 'Contacts', ids: [ '1', '2' ], tag: 'smoke-test' }
+}
+--- /api/mass-actions/dedupe ---
+Status: 200
+Body: { success: true, data: { duplicates: [ [Object] ], inspectedIds: [] } }
+--- /api/mass-actions/update ---
+Status: 200
+Body: {
+  success: true,
+  message: 'Update operation accepted',
+  data: {
+    entity: 'Contacts',
+    ids: [ '1', '2' ],
+    updates: { status: 'active' }
+  }
+}

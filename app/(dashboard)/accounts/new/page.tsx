@@ -1,0 +1,691 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeft, User, Search, MapPin, Building2, Phone, Mail, Link as LinkIcon, Calendar, Twitter, Check, Globe } from 'lucide-react';
+import EntityAutocomplete from '@/components/ui/EntityAutocomplete';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useTranslations } from 'next-intl';
+const FieldLabel = ({ children, required }: { children: React.ReactNode, required?: boolean }) => (
+  <label className="text-[13px] font-medium text-slate-700 w-full sm:w-[160px] shrink-0 sm:text-right sm:pr-4 pt-2.5">
+    {children} {required && <span className="text-rose-500">*</span>}
+  </label>
+);
+
+export default function NewAccountPage() {
+  const router = useRouter();
+  const t = useTranslations('common');
+  const tAccounts = useTranslations('accounts');
+  const [loading, setLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<'' | 'save' | 'saveNew'>('');
+
+  // Core API fields mapped
+  const [form, setForm] = useState({
+    name: '',
+    website: '',
+    tickerSymbol: '',
+    parentAccountId: '',
+    accountNumber: '',
+    type: '-None-',
+    industry: '-None-',
+    employees: '',
+    annualRevenue: '',
+    rating: '-None-',
+    phone: '',
+    fax: '',
+    ownership: '-None-',
+    sicCode: '',
+    site: '',
+    billingStreet: '',
+    billingCity: '',
+    billingState: '-None-',
+    billingZip: '',
+    billingCountry: '-None-',
+    shippingStreet: '',
+    shippingCity: '',
+    shippingState: '-None-',
+    shippingZip: '',
+    shippingCountry: '-None-',
+    description: '',
+    status: 'active',
+  });
+
+  const submit = async (e: React.FormEvent, action: 'save' | 'saveNew' = 'save') => {
+    e.preventDefault();
+    setLoading(true);
+    setLoadingAction(action);
+
+    try {
+      const payload = {
+        ...form,
+        tickerSymbol: form.tickerSymbol || null,
+        parentAccountId: form.parentAccountId || null,
+        accountNumber: form.accountNumber || null,
+        type: form.type === '-None-' ? null : form.type,
+        industry: form.industry === '-None-' ? null : form.industry,
+        employees: form.employees ? parseInt(form.employees) : null,
+        annualRevenue: form.annualRevenue || null, // API handles BigInt conversion
+        rating: form.rating === '-None-' ? null : form.rating,
+        phone: form.phone || null,
+        fax: form.fax || null,
+        ownership: form.ownership === '-None-' ? null : form.ownership,
+        sicCode: form.sicCode || null,
+        site: form.site || null,
+        billingStreet: form.billingStreet || null,
+        billingCity: form.billingCity || null,
+        billingState: form.billingState === '-None-' ? null : form.billingState,
+        billingZip: form.billingZip || null,
+        billingCountry: form.billingCountry === '-None-' ? null : form.billingCountry,
+        shippingStreet: form.shippingStreet || null,
+        shippingCity: form.shippingCity || null,
+        shippingState: form.shippingState === '-None-' ? null : form.shippingState,
+        shippingZip: form.shippingZip || null,
+        shippingCountry: form.shippingCountry === '-None-' ? null : form.shippingCountry,
+        description: form.description || null,
+      };
+
+      const response = await fetch('/api/accounts', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        alert(data.error || t('error'));
+        setLoading(false);
+        setLoadingAction('');
+        return;
+      }
+
+      if (action === 'save') {
+        router.push('/accounts');
+      } else {
+        setForm({
+          name: '',
+          website: '',
+          tickerSymbol: '',
+          parentAccountId: '',
+          accountNumber: '',
+          type: '-None-',
+          industry: '-None-',
+          employees: '',
+          annualRevenue: '',
+          rating: '-None-',
+          phone: '',
+          fax: '',
+          ownership: '-None-',
+          sicCode: '',
+          site: '',
+          billingStreet: '',
+          billingCity: '',
+          billingState: '-None-',
+          billingZip: '',
+          billingCountry: '-None-',
+          shippingStreet: '',
+          shippingCity: '',
+          shippingState: '-None-',
+          shippingZip: '',
+          shippingCountry: '-None-',
+          description: '',
+          status: 'active',
+        });
+        setLoading(false);
+        setLoadingAction('');
+        window.scrollTo(0, 0);
+      }
+    } catch {
+      alert(t('error'));
+      setLoading(false);
+      setLoadingAction('');
+    }
+  };
+  return (
+    <div className="w-full h-full flex flex-col bg-slate-50 relative pb-12">
+
+      {/* Sticky Top Header / Action Bar */}
+      <div className="sticky top-0 z-40 px-6 py-4 flex items-center justify-between bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div className="flex items-center gap-3">
+          <Link href="/accounts">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <h1 className="text-lg font-bold text-slate-900 tracking-tight">{tAccounts('createAccount')}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link href="/accounts">
+            <Button type="button" variant="outline" className="h-8 text-xs font-semibold px-4 text-slate-700 border-slate-300 hover:bg-slate-50">
+              {t('cancel')}
+            </Button>
+          </Link>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 text-xs font-semibold px-4 text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+            disabled={loading}
+            onClick={(e) => submit(e, 'saveNew')}
+          >
+            {loadingAction === 'saveNew' ? t('saving') : t('saveAndNew')}
+          </Button>
+          <Button
+            type="button"
+            className="h-8 text-xs font-semibold px-6 bg-primary hover:bg-primary/90 text-white shadow-sm"
+            disabled={loading}
+            onClick={(e) => submit(e, 'save')}
+          >
+            {loadingAction === 'save' ? t('saving') : t('save')}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex-1 max-w-5xl mx-auto w-full px-6 py-8">
+        <form id="account-form" className="space-y-12">
+
+          {/* Section: Account Image */}
+          <section>
+            <h2 className="text-sm font-semibold text-slate-900 mb-6 border-b border-slate-200 pb-2">{tAccounts('sections.accountImage')}</h2>
+            <div className="flex items-center gap-6">
+              <div className="h-20 w-20 rounded-lg bg-slate-100 border border-slate-200 border-dashed flex items-center justify-center relative overflow-hidden group cursor-pointer hover:bg-slate-50 hover:border-indigo-300 transition-colors shadow-sm">
+                <Building2 className="h-8 w-8 text-slate-400 group-hover:text-indigo-400 transition-colors" />
+                <div className="absolute inset-x-0 bottom-0 bg-black/50 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] text-white font-medium uppercase tracking-wider">{t('upload')}</span>
+                </div>
+              </div>
+              <div className="text-sm text-slate-500 max-w-sm">
+                <p>{tAccounts('uploadLogo')}</p>
+                <p className="text-xs mt-1">{t('acceptableFormats')}</p>
+              </div>
+            </div>
+          </section>
+
+          {/* Section: Account Information */}
+          <section>
+            <h2 className="text-sm font-semibold text-slate-900 mb-6 border-b border-slate-200 pb-2">{tAccounts('sections.accountInfo')}</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-6">
+
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Read-only Owner placeholder */}
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.owner')}</FieldLabel>
+                  <div className="flex-1 relative">
+                    <Input readOnly value={t('activeUser')} className="h-9 text-sm border-blue-200 bg-blue-50/50 text-blue-900 font-medium" />
+                    <User className="absolute right-3 top-2.5 h-4 w-4 text-blue-500" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel required>{tAccounts('fields.name')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      required
+                      placeholder={t('placeholders.accountName')}
+                      value={form.name}
+                      onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.site')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.site}
+                      onChange={(e) => setForm(f => ({ ...f, site: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.parentAccount')}</FieldLabel>
+                  <div className="flex-1 relative">
+                    <EntityAutocomplete
+                      endpoint="/api/accounts"
+                      placeholder={t('placeholders.searchAccounts')}
+                      value={form.parentAccountId}
+                      onChange={(id) => setForm(f => ({ ...f, parentAccountId: id }))}
+                    />
+                    <Building2 className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.number')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.accountNumber}
+                      onChange={(e) => setForm(f => ({ ...f, accountNumber: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.type')}</FieldLabel>
+                  <div className="flex-1">
+                    <Select
+                      value={form.type}
+                      onValueChange={(v) => setForm(f => ({ ...f, type: v }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm focus:ring-indigo-500 shadow-sm">
+                        <SelectValue placeholder={t('none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="-None-">{t('none')}</SelectItem>
+                        <SelectItem value="Analyst">{t('accountTypes.analyst')}</SelectItem>
+                        <SelectItem value="Competitor">{t('accountTypes.competitor')}</SelectItem>
+                        <SelectItem value="Customer">{t('accountTypes.customer')}</SelectItem>
+                        <SelectItem value="Integrator">{t('accountTypes.integrator')}</SelectItem>
+                        <SelectItem value="Investor">{t('accountTypes.investor')}</SelectItem>
+                        <SelectItem value="Partner">{t('accountTypes.partner')}</SelectItem>
+                        <SelectItem value="Press">{t('accountTypes.press')}</SelectItem>
+                        <SelectItem value="Prospect">{t('accountTypes.prospect')}</SelectItem>
+                        <SelectItem value="Reseller">{t('accountTypes.reseller')}</SelectItem>
+                        <SelectItem value="Other">{t('accountTypes.other')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.industry')}</FieldLabel>
+                  <div className="flex-1">
+                    <Select
+                      value={form.industry}
+                      onValueChange={(v) => setForm(f => ({ ...f, industry: v }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm focus:ring-indigo-500 shadow-sm">
+                        <SelectValue placeholder={t('none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="-None-">{t('none')}</SelectItem>
+                        <SelectItem value="ASP">{t('industries.asp')}</SelectItem>
+                        <SelectItem value="Data/Telecom">{t('industries.dataTelecom')}</SelectItem>
+                        <SelectItem value="ERP">{t('industries.erp')}</SelectItem>
+                        <SelectItem value="Government/Military">{t('industries.government')}</SelectItem>
+                        <SelectItem value="Large Enterprise">{t('industries.largeEnterprise')}</SelectItem>
+                        <SelectItem value="ManagementISV">{t('industries.managementISV')}</SelectItem>
+                        <SelectItem value="MSP">{t('industries.msp')}</SelectItem>
+                        <SelectItem value="Network Equipment">{t('industries.networkEquipment')}</SelectItem>
+                        <SelectItem value="Non-management">{t('industries.nonManagement')}</SelectItem>
+                        <SelectItem value="Optical Networking">{t('industries.opticalNetworking')}</SelectItem>
+                        <SelectItem value="Service Provider">{t('industries.serviceProvider')}</SelectItem>
+                        <SelectItem value="SME">{t('industries.sme')}</SelectItem>
+                        <SelectItem value="Storage Equipment">{t('industries.storageEquipment')}</SelectItem>
+                        <SelectItem value="Systems Integrator">{t('industries.systemsIntegrator')}</SelectItem>
+                        <SelectItem value="Wireless Industry">{t('industries.wireless')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.annualRevenue')}</FieldLabel>
+                  <div className="flex-1 relative">
+                    <span className="absolute left-3 top-2.5 text-sm text-slate-500">$</span>
+                    <Input
+                      type="number"
+                      value={form.annualRevenue}
+                      onChange={(e) => setForm(f => ({ ...f, annualRevenue: e.target.value }))}
+                      className="h-9 pl-7 text-sm focus-visible:ring-indigo-500 shadow-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.rating')}</FieldLabel>
+                  <div className="flex-1">
+                    <Select
+                      value={form.rating}
+                      onValueChange={(v) => setForm(f => ({ ...f, rating: v }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm focus:ring-indigo-500 shadow-sm">
+                        <SelectValue placeholder={t('none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="-None-">{t('none')}</SelectItem>
+                        <SelectItem value="Acquired">{t('ratings.acquired')}</SelectItem>
+                        <SelectItem value="Active">{t('ratings.active')}</SelectItem>
+                        <SelectItem value="Market Failed">{t('ratings.marketFailed')}</SelectItem>
+                        <SelectItem value="Project Cancelled">{t('ratings.projectCancelled')}</SelectItem>
+                        <SelectItem value="Shutdown">{t('ratings.shutdown')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.phone')}</FieldLabel>
+                  <div className="flex-1 relative">
+                    <Input
+                      type="tel"
+                      placeholder={t('placeholders.phone')}
+                      value={form.phone}
+                      onChange={(e) => setForm(f => ({ ...f, phone: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm pr-9"
+                    />
+                    <Phone className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.fax')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.fax}
+                      onChange={(e) => setForm(f => ({ ...f, fax: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.website')}</FieldLabel>
+                  <div className="flex-1 relative">
+                    <Input
+                      type="url"
+                      placeholder={t('placeholders.website')}
+                      value={form.website}
+                      onChange={(e) => setForm(f => ({ ...f, website: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm pr-9"
+                    />
+                    <Globe className="absolute right-3 top-2.5 h-4 w-4 text-slate-400" />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.tickerSymbol')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.tickerSymbol}
+                      onChange={(e) => setForm(f => ({ ...f, tickerSymbol: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.ownership')}</FieldLabel>
+                  <div className="flex-1">
+                    <Select
+                      value={form.ownership}
+                      onValueChange={(v) => setForm(f => ({ ...f, ownership: v }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm focus:ring-indigo-500 shadow-sm">
+                        <SelectValue placeholder={t('none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="-None-">{t('none')}</SelectItem>
+                        <SelectItem value="Other">{t('ownerships.other')}</SelectItem>
+                        <SelectItem value="Private">{t('ownerships.private')}</SelectItem>
+                        <SelectItem value="Public">{t('ownerships.public')}</SelectItem>
+                        <SelectItem value="Subsidiary">{t('ownerships.subsidiary')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.employees')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      value={form.employees}
+                      onChange={(e) => setForm(f => ({ ...f, employees: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{tAccounts('fields.sicCode')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.sicCode}
+                      onChange={(e) => setForm(f => ({ ...f, sicCode: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500 shadow-sm"
+                    />
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
+          {/* Section: Address Information */}
+          <section>
+            <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-2">
+              <h2 className="text-sm font-semibold text-slate-900">{t('addressInformation')}</h2>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs px-3"
+                onClick={() => setForm(f => ({
+                  ...f,
+                  shippingStreet: f.billingStreet,
+                  shippingCity: f.billingCity,
+                  shippingState: f.billingState,
+                  shippingZip: f.billingZip,
+                  shippingCountry: f.billingCountry,
+                }))}
+              >
+                {t('copyAddress')}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+
+              {/* Billing Address Block */}
+              <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-5">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('billingAddress')}</h3>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('countryRegion')}</FieldLabel>
+                  <div className="flex-1">
+                    <Select
+                      value={form.billingCountry}
+                      onValueChange={(v) => setForm(f => ({ ...f, billingCountry: v }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm focus:ring-indigo-500">
+                        <SelectValue placeholder={t('none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="-None-">{t('none')}</SelectItem>
+                        <SelectItem value="US">{t('countries.us')}</SelectItem>
+                        <SelectItem value="CA">{t('countries.ca')}</SelectItem>
+                        <SelectItem value="GB">{t('countries.gb')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('streetAddress')}</FieldLabel>
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      placeholder={t('placeholders.streetName')}
+                      value={form.billingStreet}
+                      onChange={(e) => setForm(f => ({ ...f, billingStreet: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('city')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.billingCity}
+                      onChange={(e) => setForm(f => ({ ...f, billingCity: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('stateProvince')}</FieldLabel>
+                  <div className="flex-1">
+                    <Select
+                      value={form.billingState}
+                      onValueChange={(v) => setForm(f => ({ ...f, billingState: v }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm focus:ring-indigo-500">
+                        <SelectValue placeholder={t('none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="-None-">{t('none')}</SelectItem>
+                        <SelectItem value="NY">{t('states.ny') || 'New York'}</SelectItem>
+                        <SelectItem value="CA">{t('states.ca') || 'California'}</SelectItem>
+                        <SelectItem value="TX">{t('states.tx') || 'Texas'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('zipPostalCode')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.billingZip}
+                      onChange={(e) => setForm(f => ({ ...f, billingZip: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Shipping Address Block */}
+              <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-5">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">{t('shippingAddress')}</h3>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('countryRegion')}</FieldLabel>
+                  <div className="flex-1">
+                    <Select
+                      value={form.shippingCountry}
+                      onValueChange={(v) => setForm(f => ({ ...f, shippingCountry: v }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm focus:ring-indigo-500">
+                        <SelectValue placeholder={t('none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="-None-">{t('none')}</SelectItem>
+                        <SelectItem value="US">{t('countries.us')}</SelectItem>
+                        <SelectItem value="CA">{t('countries.ca')}</SelectItem>
+                        <SelectItem value="GB">{t('countries.gb')}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('streetAddress')}</FieldLabel>
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      placeholder={t('placeholders.streetName')}
+                      value={form.shippingStreet}
+                      onChange={(e) => setForm(f => ({ ...f, shippingStreet: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('city')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.shippingCity}
+                      onChange={(e) => setForm(f => ({ ...f, shippingCity: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('stateProvince')}</FieldLabel>
+                  <div className="flex-1">
+                    <Select
+                      value={form.shippingState}
+                      onValueChange={(v) => setForm(f => ({ ...f, shippingState: v }))}
+                    >
+                      <SelectTrigger className="h-9 text-sm focus:ring-indigo-500">
+                        <SelectValue placeholder={t('none')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="-None-">{t('none')}</SelectItem>
+                        <SelectItem value="NY">{t('states.ny') || 'New York'}</SelectItem>
+                        <SelectItem value="CA">{t('states.ca') || 'California'}</SelectItem>
+                        <SelectItem value="TX">{t('states.tx') || 'Texas'}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                  <FieldLabel>{t('zipPostalCode')}</FieldLabel>
+                  <div className="flex-1">
+                    <Input
+                      value={form.shippingZip}
+                      onChange={(e) => setForm(f => ({ ...f, shippingZip: e.target.value }))}
+                      className="h-9 text-sm focus-visible:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          {/* Section: Description Information */}
+          <section>
+            <div className="flex items-center justify-between mb-6 border-b border-slate-200 pb-2">
+              <h2 className="text-sm font-semibold text-slate-900">{t('descriptionInformation')}</h2>
+            </div>
+            <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-0">
+                <FieldLabel>{t('description')}</FieldLabel>
+                <div className="flex-1 max-w-4xl">
+                  <Textarea
+                    placeholder={t('placeholders.description')}
+                    value={form.description}
+                    onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))}
+                    className="min-h-[120px] text-sm focus-visible:ring-indigo-500 shadow-sm resize-y"
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </form>
+      </div>
+
+    </div>
+  );
+}
