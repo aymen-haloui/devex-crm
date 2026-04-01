@@ -5,8 +5,6 @@ import { matchSegment, safeParseSegmentRules } from './segments';
 
 export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'paused' | 'completed' | 'cancelled';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const PAGE_SIZE = 500;
 const LOCK_MS = 45_000;
 const MAX_RETRIES = 3;
@@ -160,6 +158,7 @@ export async function processCampaignBatch(
   organizationId: string,
   actorId?: string
 ): Promise<{ processed: number; sent: number; failed: number; status: CampaignStatus }> {
+  const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
   const now = new Date();
   const lockUntil = new Date(now.getTime() + LOCK_MS);
 
@@ -287,7 +286,11 @@ export async function processCampaignBatch(
     let sendError: string | null = null;
 
     try {
-      const response = await resend.emails.send({
+      if (!resendClient) {
+        throw new Error('RESEND_API_KEY is not configured');
+      }
+
+      const response = await resendClient.emails.send({
         from: getSender(campaign.organization),
         to: recipient.email,
         subject,
